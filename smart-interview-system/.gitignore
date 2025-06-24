@@ -1,0 +1,7 @@
+# Git 忽略规则
+node_modules/
+*.log
+.env
+__pycache__/
+*.pyc
+.pytest_cache/ 
