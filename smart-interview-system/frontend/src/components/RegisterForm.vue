@@ -1,8 +1,8 @@
 <template>
-  <div class="login-container">
-    <div class="login-form">
-      <h2>用户登录</h2>
-      <form @submit.prevent="onLogin">
+  <div class="register-container">
+    <div class="register-form">
+      <h2>用户注册</h2>
+      <form @submit.prevent="onRegister">
         <div class="form-group">
           <input 
             v-model="username" 
@@ -21,13 +21,23 @@
             class="form-input"
           />
         </div>
-        <button type="submit" class="login-btn" :disabled="loading">
-          {{ loading ? '登录中...' : '登录' }}
+        <div class="form-group">
+          <input 
+            v-model="confirmPassword" 
+            type="password" 
+            placeholder="确认密码" 
+            required
+            class="form-input"
+          />
+        </div>
+        <button type="submit" class="register-btn" :disabled="loading">
+          {{ loading ? '注册中...' : '注册' }}
         </button>
         <p v-if="error" class="error-message">{{ error }}</p>
+        <p v-if="success" class="success-message">{{ success }}</p>
       </form>
-      <div class="register-link">
-        <p>还没有账号？<router-link to="/register">立即注册</router-link></p>
+      <div class="login-link">
+        <p>已有账号？<router-link to="/login">立即登录</router-link></p>
       </div>
     </div>
   </div>
@@ -36,39 +46,48 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
-import { useUserStore } from '../store/userStore'
 import { useRouter } from 'vue-router'
 
 const username = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const error = ref('')
+const success = ref('')
 const loading = ref(false)
-const userStore = useUserStore()
 const router = useRouter()
 
-async function onLogin() {
-  if (!username.value || !password.value) {
-    error.value = '请输入用户名和密码'
+async function onRegister() {
+  if (!username.value || !password.value || !confirmPassword.value) {
+    error.value = '请填写所有字段'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    error.value = '两次输入的密码不一致'
+    return
+  }
+
+  if (password.value.length < 6) {
+    error.value = '密码长度不能少于6位'
     return
   }
 
   loading.value = true
   error.value = ''
+  success.value = ''
   
   try {
-    const res = await axios.post('/api/auth/login', { 
+    await axios.post('/api/auth/register', { 
       username: username.value, 
       password: password.value 
     })
     
-    localStorage.setItem('token', res.data.access_token)
-    userStore.setUser({ 
-      id: res.data.user_id, 
-      username: username.value 
-    })
-    router.push('/home')
+    success.value = '注册成功！即将跳转到登录页面...'
+    setTimeout(() => {
+      router.push('/login')
+    }, 2000)
   } catch (e) {
-    error.value = e.response?.data?.detail || '登录失败，请检查用户名和密码'
+    error.value = e.response?.data?.detail || '注册失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -76,7 +95,7 @@ async function onLogin() {
 </script>
 
 <style scoped>
-.login-container {
+.register-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -84,7 +103,7 @@ async function onLogin() {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.login-form {
+.register-form {
   background: white;
   padding: 2rem;
   border-radius: 8px;
@@ -117,7 +136,7 @@ h2 {
   border-color: #667eea;
 }
 
-.login-btn {
+.register-btn {
   width: 100%;
   padding: 0.75rem;
   background: #667eea;
@@ -129,11 +148,11 @@ h2 {
   transition: background-color 0.3s;
 }
 
-.login-btn:hover:not(:disabled) {
+.register-btn:hover:not(:disabled) {
   background: #5a6fd8;
 }
 
-.login-btn:disabled {
+.register-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
@@ -144,17 +163,23 @@ h2 {
   margin-top: 1rem;
 }
 
-.register-link {
+.success-message {
+  color: #27ae60;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.login-link {
   text-align: center;
   margin-top: 1.5rem;
 }
 
-.register-link a {
+.login-link a {
   color: #667eea;
   text-decoration: none;
 }
 
-.register-link a:hover {
+.login-link a:hover {
   text-decoration: underline;
 }
 </style> 
