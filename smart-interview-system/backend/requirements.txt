@@ -1,0 +1,4 @@
+# Python 依赖列表
+fastapi
+uvicorn
+sqlalchemy 
