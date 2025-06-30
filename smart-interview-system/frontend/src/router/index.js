@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginForm from '../components/LoginForm.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import Home from '../components/Home.vue'
+import ResumeForm from '../components/ResumeForm.vue'
 
 const routes = [
   {
@@ -25,11 +26,21 @@ const routes = [
     }
   },
   {
+    path: '/resume',
+    name: 'Resume',
+    component: ResumeForm,
+    meta: {
+      requiresAuth: true,
+      title: '完善简历'
+    }
+  },
+  {
     path: '/home',
     name: 'Home',
     component: Home,
     meta: {
       requiresAuth: true,
+      requiresResume: true,
       title: '首页'
     }
   }
@@ -40,8 +51,8 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：检查认证状态
-router.beforeEach((to, from, next) => {
+// 路由守卫：检查认证状态和简历状态
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   
   // 设置页面标题
@@ -54,9 +65,42 @@ router.beforeEach((to, from, next) => {
     return next('/login')
   }
   
-  // 如果已登录用户访问登录或注册页，重定向到首页
+  // 如果已登录用户访问登录或注册页，需要检查简历状态后决定跳转
   if ((to.path === '/login' || to.path === '/register') && token) {
-    return next('/home')
+    try {
+      // 动态导入API方法以避免循环依赖
+      const { getResumeStatus } = await import('../api/chat')
+      const response = await getResumeStatus()
+      
+      if (response.data.status === 'missing') {
+        // 用户没有简历，跳转到简历填写页面
+        return next('/resume')
+      } else {
+        // 用户已有简历，跳转到首页
+        return next('/home')
+      }
+    } catch (error) {
+      console.error('检查简历状态失败:', error)
+      // 如果检查失败，为安全起见跳转到简历页面
+      return next('/resume')
+    }
+  }
+  
+  // 检查是否需要简历（访问首页时）
+  if (to.meta.requiresResume && token) {
+    try {
+      const { getResumeStatus } = await import('../api/chat')
+      const response = await getResumeStatus()
+      
+      if (response.data.status === 'missing') {
+        // 用户没有简历，跳转到简历填写页面
+        return next('/resume')
+      }
+    } catch (error) {
+      console.error('检查简历状态失败:', error)
+      // 如果检查失败，为安全起见跳转到简历页面
+      return next('/resume')
+    }
   }
   
   next()

@@ -13,22 +13,34 @@ router = APIRouter(prefix="/api/user", tags=["简历管理"])
 
 class ResumeData(BaseModel):
     """简历数据模型"""
-    name: str
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    age: Optional[int] = None
-    education: str
-    school: Optional[str] = None
-    major: Optional[str] = None
-    graduationDate: Optional[str] = None
-    targetPosition: str
-    expectedSalary: Optional[str] = None
-    workLocation: Optional[str] = None
-    workExperience: Optional[str] = None
-    workDescription: Optional[str] = None
-    skills: Optional[str] = None
-    projects: Optional[str] = None
-    selfEvaluation: Optional[str] = None
+    # 基本信息
+    name: str  # 姓名（必填）
+    age: Optional[int] = None  # 年龄
+    location: Optional[str] = None  # 居住城市
+
+    # 求职意向
+    targetPosition: str  # 期望职位（必填）
+    expectedSalary: Optional[str] = None  # 期望薪资
+
+    # 教育背景
+    education: str  # 学历（必填）
+    major: Optional[str] = None  # 专业
+    university: Optional[str] = None  # 毕业院校
+    graduationYear: Optional[int] = None  # 毕业年份
+
+    # 工作经验
+    workExperience: Optional[str] = None  # 工作年限
+    workDescription: Optional[str] = None  # 工作描述
+
+    # 技能特长
+    technicalSkills: Optional[str] = None  # 技术技能
+    otherSkills: Optional[str] = None  # 其他技能
+
+    # 项目经验
+    projectExperience: Optional[str] = None  # 项目描述
+
+    # 自我评价
+    selfEvaluation: Optional[str] = None  # 个人优势
 
 @router.get("/resume-status")
 async def get_resume_status(

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.database import get_db
+from app.config import get_db
 
 # JWT配置
 SECRET_KEY = "your-secret-key-here-should-be-random-and-secure"

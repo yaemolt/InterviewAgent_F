@@ -1,8 +1,10 @@
 <template>
   <div class="resume-container">
     <div class="resume-form">
-      <h2>完善您的简历信息</h2>
-      <p class="resume-desc">请填写以下信息，以便为您提供更精准的面试体验</p>
+      <h2>{{ isEditMode ? '编辑简历信息' : '完善您的简历信息' }}</h2>
+      <p class="resume-desc">
+        {{ isEditMode ? '更新您的简历信息' : '请填写以下信息，以便为您提供更精准的面试体验' }}
+      </p>
       
       <form @submit.prevent="onSubmit">
         <!-- 基本信息 -->
@@ -20,27 +22,6 @@
               />
             </div>
             <div class="form-group">
-              <label>手机号</label>
-              <input 
-                v-model="resume.phone" 
-                type="tel" 
-                placeholder="请输入手机号"
-                class="form-input"
-              />
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>邮箱</label>
-              <input 
-                v-model="resume.email" 
-                type="email" 
-                placeholder="请输入邮箱地址"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group">
               <label>年龄</label>
               <input 
                 v-model="resume.age" 
@@ -48,6 +29,42 @@
                 placeholder="年龄"
                 min="18" 
                 max="65"
+                class="form-input"
+              />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>居住城市</label>
+            <input 
+              v-model="resume.location" 
+              type="text" 
+              placeholder="如：北京、上海、深圳"
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <!-- 求职意向 -->
+        <div class="form-section">
+          <h3>求职意向</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>期望职位 *</label>
+              <input 
+                v-model="resume.targetPosition" 
+                type="text" 
+                placeholder="如：前端开发工程师、产品经理等"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label>期望薪资</label>
+              <input 
+                v-model="resume.expectedSalary" 
+                type="text" 
+                placeholder="如：8k-12k、面议"
                 class="form-input"
               />
             </div>
@@ -70,18 +87,6 @@
               </select>
             </div>
             <div class="form-group">
-              <label>毕业院校</label>
-              <input 
-                v-model="resume.school" 
-                type="text" 
-                placeholder="请输入毕业院校"
-                class="form-input"
-              />
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
               <label>专业</label>
               <input 
                 v-model="resume.major" 
@@ -90,50 +95,29 @@
                 class="form-input"
               />
             </div>
-            <div class="form-group">
-              <label>毕业时间</label>
-              <input 
-                v-model="resume.graduationDate" 
-                type="month" 
-                class="form-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- 求职意向 -->
-        <div class="form-section">
-          <h3>求职意向</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label>目标职位 *</label>
-              <input 
-                v-model="resume.targetPosition" 
-                type="text" 
-                placeholder="如：前端开发工程师、产品经理等"
-                required
-                class="form-input"
-              />
-            </div>
-            <div class="form-group">
-              <label>期望薪资</label>
-              <input 
-                v-model="resume.expectedSalary" 
-                type="text" 
-                placeholder="如：8k-12k"
-                class="form-input"
-              />
-            </div>
           </div>
           
-          <div class="form-group">
-            <label>工作地点</label>
-            <input 
-              v-model="resume.workLocation" 
-              type="text" 
-              placeholder="如：北京、上海、深圳"
-              class="form-input"
-            />
+          <div class="form-row">
+            <div class="form-group">
+              <label>毕业院校</label>
+              <input 
+                v-model="resume.university" 
+                type="text" 
+                placeholder="请输入毕业院校"
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label>毕业年份</label>
+              <input 
+                v-model="resume.graduationYear" 
+                type="number" 
+                placeholder="如：2020"
+                min="1980"
+                max="2030"
+                class="form-input"
+              />
+            </div>
           </div>
         </div>
 
@@ -154,7 +138,7 @@
           </div>
           
           <div class="form-group">
-            <label>工作经历描述</label>
+            <label>工作描述</label>
             <textarea 
               v-model="resume.workDescription" 
               placeholder="请简要描述您的工作经历、主要职责和成就..."
@@ -168,21 +152,35 @@
         <div class="form-section">
           <h3>技能特长</h3>
           <div class="form-group">
-            <label>专业技能</label>
+            <label>技术技能</label>
             <textarea 
-              v-model="resume.skills" 
-              placeholder="请描述您的专业技能，如：JavaScript、Python、Photoshop等..."
+              v-model="resume.technicalSkills" 
+              placeholder="请描述您的技术技能，如：JavaScript、Python、Photoshop等..."
               rows="3"
               class="form-textarea"
             ></textarea>
           </div>
           
           <div class="form-group">
-            <label>项目经验</label>
+            <label>其他技能</label>
             <textarea 
-              v-model="resume.projects" 
-              placeholder="请描述您参与过的重要项目..."
+              v-model="resume.otherSkills" 
+              placeholder="请描述您的其他技能，如：沟通能力、团队协作等..."
               rows="3"
+              class="form-textarea"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- 项目经验 -->
+        <div class="form-section">
+          <h3>项目经验</h3>
+          <div class="form-group">
+            <label>项目描述</label>
+            <textarea 
+              v-model="resume.projectExperience" 
+              placeholder="请描述您参与过的重要项目..."
+              rows="4"
               class="form-textarea"
             ></textarea>
           </div>
@@ -204,10 +202,10 @@
 
         <div class="form-actions">
           <button type="submit" class="submit-btn" :disabled="loading">
-            {{ loading ? '保存中...' : '保存简历' }}
+            {{ loading ? '保存中...' : (isEditMode ? '更新简历' : '保存简历') }}
           </button>
           <button type="button" class="cancel-btn" @click="handleCancel">
-            稍后填写
+            {{ isEditMode ? '返回首页' : '稍后填写' }}
           </button>
         </div>
 
@@ -218,38 +216,72 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { submitResume } from '../api/chat'
+import { submitResume, getResume } from '../api/chat'
 import { useUserStore } from '../store/userStore'
 
 const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
 const error = ref('')
+const isEditMode = ref(false)
 
 const resume = reactive({
+  // 基本信息
   name: '',
-  phone: '',
-  email: '',
-  age: '',
-  education: '',
-  school: '',
-  major: '',
-  graduationDate: '',
+  age: null,
+  location: '',
+  
+  // 求职意向
   targetPosition: '',
   expectedSalary: '',
-  workLocation: '',
+  
+  // 教育背景
+  education: '',
+  major: '',
+  university: '',
+  graduationYear: null,
+  
+  // 工作经验
   workExperience: '',
   workDescription: '',
-  skills: '',
-  projects: '',
+  
+  // 技能特长
+  technicalSkills: '',
+  otherSkills: '',
+  
+  // 项目经验
+  projectExperience: '',
+  
+  // 自我评价
   selfEvaluation: ''
+})
+
+// 页面加载时检查是否有现有简历数据
+onMounted(async () => {
+  try {
+    const response = await getResume()
+    if (response.data.success && response.data.data) {
+      isEditMode.value = true
+      const existingData = response.data.data.data
+      
+      // 预填充表单数据
+      Object.keys(resume).forEach(key => {
+        if (existingData[key] !== undefined) {
+          resume[key] = existingData[key]
+        }
+      })
+    }
+  } catch (error) {
+    // 如果获取失败，可能是新用户，继续显示空表单
+    console.log('未找到现有简历，显示空表单')
+  }
 })
 
 const onSubmit = async () => {
   if (!resume.name || !resume.education || !resume.targetPosition) {
-    error.value = '请填写必填字段（姓名、学历、目标职位）'
+    error.value = '请填写必填字段（姓名、学历、期望职位）'
     return
   }
 
@@ -267,10 +299,16 @@ const onSubmit = async () => {
 }
 
 const handleCancel = () => {
-  if (confirm('确定要稍后填写吗？您需要完善简历才能开始面试。')) {
-    userStore.clearUser()
-    localStorage.removeItem('token')
-    router.push('/login')
+  if (isEditMode.value) {
+    // 编辑模式下，返回首页
+    router.push('/home')
+  } else {
+    // 新建模式下，提示用户
+    if (confirm('确定要稍后填写吗？您需要完善简历才能开始面试。')) {
+      userStore.clearUser()
+      localStorage.removeItem('token')
+      router.push('/login')
+    }
   }
 }
 </script>

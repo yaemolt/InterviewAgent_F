@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.routers import auth
-from app.database import init_database, get_db
+from app.routers import auth, resume
+from app.database import init_database
+from app.config import get_db
 
 # 在应用启动时初始化数据库
 @asynccontextmanager
@@ -26,6 +27,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(resume.router, tags=["简历管理"])
 
 @app.get("/")
 async def root():
