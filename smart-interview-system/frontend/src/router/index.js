@@ -3,6 +3,8 @@ import LoginForm from '../components/LoginForm.vue'
 import RegisterForm from '../components/RegisterForm.vue'
 import Home from '../components/Home.vue'
 import ResumeForm from '../components/ResumeForm.vue'
+import AdminDashboard from '../views/AdminDashboard.vue'
+import UserDashboard from '../views/UserDashboard.vue'
 
 const routes = [
   {
@@ -14,7 +16,8 @@ const routes = [
     name: 'Login',
     component: LoginForm,
     meta: {
-      title: '登录'
+      title: '登录',
+      requiresGuest: true // 只允许未登录用户访问
     }
   },
   {
@@ -22,7 +25,28 @@ const routes = [
     name: 'Register',
     component: RegisterForm,
     meta: {
-      title: '注册'
+      title: '注册',
+      requiresGuest: true
+    }
+  },
+  {
+    path: '/admin-dashboard',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: {
+      requiresAuth: true,
+      requiresRole: 'admin',
+      title: '管理员控制台'
+    }
+  },
+  {
+    path: '/user-dashboard',
+    name: 'UserDashboard',
+    component: UserDashboard,
+    meta: {
+      requiresAuth: true,
+      requiresRole: 'user',
+      title: '用户中心'
     }
   },
   {
@@ -40,7 +64,6 @@ const routes = [
     component: Home,
     meta: {
       requiresAuth: true,
-      requiresResume: true,
       title: '首页'
     }
   }
@@ -51,55 +74,52 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：检查认证状态和简历状态
+// 导入用户状态管理
+import { useUserStore } from '../store/userStore'
+
+// 路由守卫：检查认证状态和角色权限
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem('token')
+  const userStore = useUserStore()
+  
+  // 初始化用户状态（如果还没有初始化）
+  if (!userStore.isAuthenticated) {
+    userStore.initializeUser()
+  }
   
   // 设置页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - 智能面试辅助系统`
   }
   
-  // 如果访问需要认证的路由但没有token，重定向到登录页
-  if (to.meta.requiresAuth && !token) {
-    return next('/login')
-  }
-  
-  // 如果已登录用户访问登录或注册页，需要检查简历状态后决定跳转
-  if ((to.path === '/login' || to.path === '/register') && token) {
-    try {
-      // 动态导入API方法以避免循环依赖
-      const { getResumeStatus } = await import('../api/chat')
-      const response = await getResumeStatus()
-      
-      if (response.data.status === 'missing') {
-        // 用户没有简历，跳转到简历填写页面
-        return next('/resume')
-      } else {
-        // 用户已有简历，跳转到首页
-        return next('/home')
-      }
-    } catch (error) {
-      console.error('检查简历状态失败:', error)
-      // 如果检查失败，为安全起见跳转到简历页面
-      return next('/resume')
+  // 如果路由要求游客访问（登录、注册页），但用户已登录
+  if (to.meta.requiresGuest && userStore.isAuthenticated) {
+    // 根据用户角色重定向到对应的Dashboard
+    if (userStore.isAdmin) {
+      return next('/admin-dashboard')
+    } else if (userStore.isUser) {
+      return next('/user-dashboard')
+    } else {
+      return next('/home')
     }
   }
   
-  // 检查是否需要简历（访问首页时）
-  if (to.meta.requiresResume && token) {
-    try {
-      const { getResumeStatus } = await import('../api/chat')
-      const response = await getResumeStatus()
-      
-      if (response.data.status === 'missing') {
-        // 用户没有简历，跳转到简历填写页面
-        return next('/resume')
+  // 如果访问需要认证的路由但用户未登录
+  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
+    return next('/login')
+  }
+  
+  // 如果路由需要特定角色
+  if (to.meta.requiresRole && userStore.isAuthenticated) {
+    const requiredRole = to.meta.requiresRole
+    if (userStore.role !== requiredRole) {
+      // 用户角色不匹配，重定向到对应的Dashboard
+      if (userStore.isAdmin) {
+        return next('/admin-dashboard')
+      } else if (userStore.isUser) {
+        return next('/user-dashboard')
+      } else {
+        return next('/login')
       }
-    } catch (error) {
-      console.error('检查简历状态失败:', error)
-      // 如果检查失败，为安全起见跳转到简历页面
-      return next('/resume')
     }
   }
   
