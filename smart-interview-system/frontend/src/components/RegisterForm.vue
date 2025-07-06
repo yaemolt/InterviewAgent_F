@@ -251,9 +251,25 @@ const onRegister = async () => {
     console.log('注册响应:', data)
 
     if (response.ok) {
-      success.value = '注册成功！即将跳转到登录页面...'
+      success.value = '注册成功！即将跳转到个人信息填写页面...'
+      
+      // 导入用户状态管理
+      const { useUserStore } = await import('../store/userStore.js')
+      const userStore = useUserStore()
+      
+      // 设置用户登录状态
+      userStore.setUser({
+        username: data.username,
+        name: data.name,
+        role: data.role,
+        token: data.token,
+        hasCompletedProfile: data.hasCompletedProfile || false,
+        isNewUser: data.isNewUser || true
+      })
+      
       setTimeout(() => {
-        router.push('/login')
+        // 注册成功后跳转到个人信息设置页面
+        router.push('/profile-setup')
       }, 2000)
     } else {
       error.value = data.message || data.error || '注册失败'

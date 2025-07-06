@@ -61,10 +61,15 @@ def register():
         "name": username  # 默认显示名称为用户名
     }
 
+    # 注册成功后自动登录，返回token和用户信息
     return jsonify({
         "message": "注册成功！",
+        "token": f"fake-jwt-token-{username}",
         "username": username,
-        "role": "user"
+        "name": username,
+        "role": "user",
+        "hasCompletedProfile": False,
+        "isNewUser": True
     }), 200
 
 @app.route('/api/user/info', methods=['GET'])

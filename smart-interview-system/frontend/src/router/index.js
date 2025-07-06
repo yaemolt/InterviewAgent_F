@@ -5,6 +5,8 @@ import Home from '../components/Home.vue'
 import ResumeForm from '../components/ResumeForm.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import UserDashboard from '../views/UserDashboard.vue'
+import ProfileSetup from '../views/ProfileSetup.vue'
+import ModernUserDashboard from '../views/ModernUserDashboard.vue'
 
 const routes = [
   {
@@ -42,11 +44,19 @@ const routes = [
   {
     path: '/user-dashboard',
     name: 'UserDashboard',
-    component: UserDashboard,
+    component: ModernUserDashboard,
     meta: {
       requiresAuth: true,
       requiresRole: 'user',
       title: '用户中心'
+    }
+  },
+  {
+    path: '/profile-setup',
+    name: 'ProfileSetup',
+    component: ProfileSetup,
+    meta: {
+      title: '完善个人信息'
     }
   },
   {
@@ -97,6 +107,10 @@ router.beforeEach(async (to, from, next) => {
     if (userStore.isAdmin) {
       return next('/admin-dashboard')
     } else if (userStore.isUser) {
+      // 检查用户是否已完成个人信息填写
+      if (!userStore.hasCompletedProfile && to.path !== '/profile-setup') {
+        return next('/profile-setup')
+      }
       return next('/user-dashboard')
     } else {
       return next('/home')
@@ -116,10 +130,21 @@ router.beforeEach(async (to, from, next) => {
       if (userStore.isAdmin) {
         return next('/admin-dashboard')
       } else if (userStore.isUser) {
+        // 检查用户是否已完成个人信息填写
+        if (!userStore.hasCompletedProfile && to.path !== '/profile-setup') {
+          return next('/profile-setup')
+        }
         return next('/user-dashboard')
       } else {
         return next('/login')
       }
+    }
+  }
+  
+  // 如果是普通用户访问需要认证的页面，但未完成个人信息填写
+  if (to.meta.requiresAuth && userStore.isAuthenticated && userStore.role === 'user') {
+    if (!userStore.hasCompletedProfile && to.path !== '/profile-setup') {
+      return next('/profile-setup')
     }
   }
   
